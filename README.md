@@ -1,1 +1,1 @@
-# Syntax highlighting for RapydScript 
+# Syntax highlighting for [Rapydscript](https://github.com/atsepkov/RapydScript)
