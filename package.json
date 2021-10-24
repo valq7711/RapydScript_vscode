@@ -3,6 +3,7 @@
     "displayName": "RapydScript Lang",
     "description": "Syntax highlighting for RapydScript",
     "version": "0.0.1",
+    "license": "MIT",
     "engines": {
         "vscode": "^1.61.0"
     },
@@ -31,4 +32,15 @@
             }
         ]
     }
+  "maintainers": [
+    {
+      "name": "Valeriy Kucherov",
+      "email": "valq7711@gmail.com"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valq7711/RapydScript_vscode.git"
+  },
+  "dependencies": {}
 }
