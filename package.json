@@ -1,0 +1,34 @@
+{
+    "name": "rapydscript-lang",
+    "displayName": "RapydScript Lang",
+    "description": "Syntax highlighting for RapydScript",
+    "version": "0.0.1",
+    "engines": {
+        "vscode": "^1.61.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "activationEvents": [
+		"onLanguage:rapydscript"
+	],
+    "main": "./bin/extension.js",
+    "contributes": {
+        "languages": [{
+            "id": "rapydscript",
+            "aliases": ["RapydScript", "rapydscript"],
+            "extensions": [".pyj"],
+            "configuration": "./language-configuration.json"
+        }],
+        "semanticTokenScopes": [
+            {
+              "language": "rapydscript",
+              "scopes": {
+                "operator.logical": ["keyword.operator.logical.python"],
+                "struct.class": ["storage.type.class.python"],
+                "struct.function": ["storage.type.function.python"]
+              }
+            }
+        ]
+    }
+}

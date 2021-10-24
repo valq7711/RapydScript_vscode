@@ -1,0 +1,102 @@
+from rs_tokenizer import tokenizer, TokenErrorTypes
+from utils import ParseError
+
+
+class SematicTokenizer:
+    def __init__(self, txt):
+        self.next_token = tokenizer(txt, 'current.pyj')
+        self.txt = txt
+        self.prev = {}
+        self.prev_ret = {}
+
+    def process_error(self, err):
+        next_token = self.next_token
+        if err.token_error_type is TokenErrorTypes.UNEXPECTED_EOF:
+            return
+        if err.token_error_type is TokenErrorTypes.UNEXPECTED_EOL:
+            return True
+        while True:
+            ch = next_token.peek()
+            if not ch:
+                return
+            if not /^\s$/.test(ch):
+                next_token.next()
+                continue
+            return True
+
+    def token(self, t):
+        if t.type in ['string', 'regexp', 'comment']:
+            return t
+        if t.type is 'operator':
+            if t.subtype is 'keyword':
+                t.tokenModifiers = ['logical']
+            return t
+        if t.type is 'keyword':
+            if t.value is 'def':
+                t.type = 'struct'
+                t.tokenModifiers = ['function']
+            elif t.value is 'class':
+                t.type = 'struct'
+                t.tokenModifiers = ['class']
+            return t
+        if t.type is 'num':
+            t.type = 'number'
+            return t
+        if t.type is 'punc':
+            #t.type = '???'
+            return
+        if t.type is 'atom':
+            t.type = 'variable'
+            t.tokenModifiers = ['readonly']
+            return t
+        if t.type is 'name':
+            prev = self.prev
+            if prev.type in ['keyword', 'struct']:
+                if prev.value in ['import', 'from']:
+                    t.type = 'namespace'
+                    return t
+                if prev.value is 'def':
+                    t.type = 'function'
+                    return t
+                if prev.value is 'class':
+                    t.type = 'class'
+                    return t
+            if prev.type is 'punc' and prev.value is '.':
+                t.type = 'property'
+                return t
+            if self.prev_ret.type is 'function'
+            or self.prev_ret.type is 'parameter' and prev.value is not ':':
+                t.type = 'parameter'
+                return t
+
+            t.type = 'variable'
+            return t
+
+
+
+    def parse_token(self):
+        ret = None
+        i = 0
+        max = 100
+        while not ret and i < max:
+            try:
+                t = self.next_token()
+                if t.type is 'eof':
+                    return
+                ret = self.token(t)
+                self.prev = t
+            except ParseError as err:
+                if self.process_error(err):
+                    continue
+                break
+            i += 1
+        if ret.value != '*':
+            self.prev_ret = ret
+        return ret
+
+module.exports = {
+	SematicTokenizer
+}
+
+
+

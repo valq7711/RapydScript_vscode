@@ -1,0 +1,93 @@
+
+vscode = require('vscode')
+tokenizer = require('./tokenizer')
+
+tokenTypes = new Map()
+tokenModifiers = new Map()
+
+def legend():
+    tokenTypesLegend = [
+        'comment', 'string', 'keyword', 'number', 'regexp', 'operator', 'namespace',
+        'type', 'struct', 'class', 'interface', 'enum', 'typeParameter', 'function',
+        'method', 'macro', 'variable', 'parameter', 'property', 'label'
+    ]
+    tokenTypesLegend.forEach(def(tokenType, index): tokenTypes.set(tokenType, index);)
+    tokenModifiersLegend = [
+        'declaration', 'documentation', 'readonly', 'static', 'abstract', 'deprecated',
+        'modification', 'async', 'logical', 'class', 'function'
+    ]
+    tokenModifiersLegend.forEach(def(tm, index): tokenModifiers.set(tm, index);)
+
+    return new vscode.SemanticTokensLegend(tokenTypesLegend, tokenModifiersLegend)
+
+
+def activate(context):
+    context.subscriptions.push(
+        vscode.languages.registerDocumentSemanticTokensProvider(
+            {language: 'rapydscript'},
+            new DocumentSemanticTokensProvider(),
+            legend()
+        )
+    )
+
+
+class DocumentSemanticTokensProvider:
+
+    def provideDocumentSemanticTokens(self, document, cancelToken):
+        tkz = new tokenizer.SematicTokenizer(document.getText())
+        builder = new vscode.SemanticTokensBuilder()
+        while True:
+            token = tkz.parse_token()
+            if not token:
+                break
+            if token.type is 'string' and token._value:
+                self.push_multiline_str(token, builder)
+                continue
+            builder.push(
+                token.line - 1,
+                token.col,
+                token.endpos - token.pos,
+                self._encodeTokenType(token.type),
+                self._encodeTokenModifiers(token.tokenModifiers or [])
+            )
+        return builder.build()
+
+    def push_multiline_str(self, token, builder):
+        lines = token._value.split(/\r\n|\r|\n/)
+        col = token.col
+        ln = token.line
+        for i in range(lines.length):
+            builder.push(
+                ln + i - 1,
+                col,
+                lines[i].length,
+                self._encodeTokenType(token.type),
+                self._encodeTokenModifiers(token.tokenModifiers or [])
+            )
+            col = 0
+
+    def _encodeTokenType(self, tokenType):
+        if tokenTypes.has(tokenType):
+            return tokenTypes.get(tokenType)
+        elif tokenType == 'notInLegend':
+            return tokenTypes.size + 2
+        return 0
+
+    def _encodeTokenModifiers(self, strTokenModifiers):
+        result = 0
+        for i in range(strTokenModifiers.length):
+            tokenModifier = strTokenModifiers[i]
+            if tokenModifiers.has(tokenModifier):
+                result = result | (1 << tokenModifiers.get(tokenModifier))
+            elif tokenModifier == 'notInLegend':
+                result = result | (1 << tokenModifiers.size + 2)
+        return result
+
+def deactivate():
+    pass
+
+
+module.exports = {
+	activate,
+	deactivate
+}
